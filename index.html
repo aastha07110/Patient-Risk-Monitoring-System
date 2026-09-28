@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Patient Risk Monitoring System</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<header class="app-header">
+  <div class="app-title">Patient Risk Monitoring</div>
+  <nav class="app-nav">
+    <button class="nav-btn" data-view="dashboard">Dashboard</button>
+    <button class="nav-btn" data-view="patients">Patients</button>
+  </nav>
+</header>
+
+<main>
+
+  <section id="view-dashboard" class="view">
+    <div class="view-header"><h1>Overview</h1></div>
+    <div class="stat-row">
+      <div class="card stat-card"><div class="stat-label">Total Patients</div><div class="stat-value" id="stat-total">0</div></div>
+      <div class="card stat-card"><div class="stat-label">High Risk</div><div class="stat-value" id="stat-high">0</div></div>
+      <div class="card stat-card"><div class="stat-label">Admissions (last 7 days)</div><div class="stat-value" id="stat-recent">0</div></div>
+    </div>
+    <div class="chart-row">
+      <div class="card chart-card"><h2>Risk Distribution</h2><canvas id="chart-distribution"></canvas></div>
+      <div class="card chart-card"><h2>HIGH-Risk Events — Last 7 Days</h2><canvas id="chart-trend"></canvas></div>
+    </div>
+  </section>
+
+  <section id="view-patients" class="view">
+    <div class="view-header">
+      <h1>Patients</h1>
+      <button class="primary" id="add-patient-btn">+ Add Patient</button>
+    </div>
+    <div class="card">
+      <table>
+        <thead><tr><th>Name</th><th>Age</th><th>Admitted</th><th>Last Updated</th><th>Risk</th><th></th></tr></thead>
+        <tbody id="patient-list-body"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="view-detail" class="view">
+    <div class="view-header">
+      <h1 id="detail-title">New Patient</h1>
+      <button class="secondary" id="back-to-list-btn">← Back to list</button>
+    </div>
+    <div class="detail-grid">
+      <div class="card">
+        <div class="dropzone" id="pdf-dropzone">
+          Drop a lab report / discharge summary PDF here, or click to choose a file
+          <input type="file" id="pdf-file-input" accept="application/pdf" hidden />
+        </div>
+        <div id="pdf-status"></div>
+
+        <form id="patient-form" novalidate>
+          <fieldset>
+            <legend>Demographics</legend>
+            <div class="field-grid">
+              <div><label>Full Name</label><input type="text" name="name" /></div>
+              <div><label>Date of Birth</label><input type="date" name="dob" /></div>
+              <div><label>Age</label><input type="number" name="age" min="0" max="120" /></div>
+              <div><label>Gender</label>
+                <select name="gender"><option>Female</option><option>Male</option><option>Other</option></select>
+              </div>
+              <div><label>Contact</label><input type="tel" name="contact" /></div>
+              <div><label>Admission Date</label><input type="date" name="admissionDate" /></div>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Vitals</legend>
+            <div class="field-grid">
+              <div><label>Heart Rate (bpm)</label><input type="number" name="heartRate" min="0" /></div>
+              <div><label>Systolic BP (mmHg)</label><input type="number" name="systolicBP" min="0" /></div>
+              <div><label>SpO2 (%)</label><input type="number" name="spo2" min="0" max="100" /></div>
+              <div><label>Temperature (°C)</label><input type="number" step="0.1" name="temperature" /></div>
+              <div><label>Respiratory Rate (/min)</label><input type="number" name="respRate" min="0" /></div>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Medical History</legend>
+            <div class="checkbox-group">
+              <label class="checkbox-row"><input type="checkbox" name="diabetes" /> Diabetes</label>
+              <label class="checkbox-row"><input type="checkbox" name="copd" /> COPD</label>
+              <label class="checkbox-row"><input type="checkbox" name="cardiac" /> Cardiac Disease</label>
+            </div>
+            <div class="field-grid" style="margin-top:10px;">
+              <div><label>ER Visits (last 30 days)</label><input type="number" name="erVisits" min="0" /></div>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Lab Indicators</legend>
+            <div class="checkbox-group">
+              <label class="checkbox-row"><input type="checkbox" name="WBC" /> Elevated WBC</label>
+              <label class="checkbox-row"><input type="checkbox" name="highCreatinine" /> High Creatinine</label>
+              <label class="checkbox-row"><input type="checkbox" name="CRP" /> High CRP</label>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Notes</legend>
+            <textarea name="notes" placeholder="Clinical observations…"></textarea>
+          </fieldset>
+
+          <div class="form-actions">
+            <button type="submit" class="primary">Save Record</button>
+            <button type="button" class="danger" id="delete-patient-btn" hidden>Delete</button>
+          </div>
+        </form>
+      </div>
+
+      <div>
+        <div class="card" style="margin-bottom:14px;">
+          <h2>Current Risk (live)</h2>
+          <div id="live-risk" class="risk-box risk-low"></div>
+        </div>
+        <div class="card">
+          <h2>Audit History</h2>
+          <div id="audit-log"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
+
+
+<script src="js/riskEngine.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/pdfParser.js"></script>
+<script src="js/app.js"></script>
+
+</body>
+</html>
