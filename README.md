@@ -50,4 +50,15 @@ On first run, four sample patients are created automatically (only if storage is
   and risk level/score after each update (including "Risk moved from X to Y")
 - Risk engine is decoupled from the UI (no DOM or storage access inside `riskEngine.js`)
 
+## Not completed / known limitations
+- **No SQL/NoSQL database server**: persistence uses browser localStorage instead (single browser,
+  single user). All data access is isolated in `js/storage.js`, so it could be swapped for a
+  server-side database without touching the risk engine or UI.
+- **PDF extraction is best-effort regex**: it handles common label formats (for example
+  `HR: 102`, `BP: 110/70`, `SpO2: 91%`) but not unusual report layouts. Scanned/image-only PDFs
+  are not supported (no OCR). The review step before saving is mandatory for this reason.
+- **7-day trend chart** is built from the audit log timestamps recorded by this app, not from
+  imported historical data.
+- No authentication or multi-user support, and no automated test suite.
+
 
